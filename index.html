@@ -98,9 +98,10 @@
         .mood-item:hover .no-image-placeholder { transform: scale(1.08); background-color: #050505; }
         .no-image-placeholder span { color: var(--text-muted); font-size: 1.1rem; font-weight: 300; transition: opacity 0.3s ease; }
 
+     /* Overlay consertado para permitir cliques na imagem */
         .mood-overlay { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 50%); display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem 1.5rem; }
-        .overlay-category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 0.3rem; }
-        .mood-overlay h3 { font-size: 1.4rem; font-weight: normal; margin-bottom: 0; color: var(--text-main); line-height: 1.2; }
+        .card-actions { display: flex; gap: 1rem; pointer-events: auto; } /* Apenas botões recebem clique */
+        .action-btn { background: rgba(255,255,255,0.1); border: none; padding: 0.4rem 1rem; border-radius: 20px; color: #fff; cursor: pointer; }
 
         .hidden-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .mood-item:hover .hidden-content { grid-template-rows: 1fr; }
