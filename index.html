@@ -13,7 +13,7 @@
             --text-muted: #888888;
             --accent: #ffffff;
             --danger: #ff4a4a;
-            --brand-color: #d20a11;
+            --brand-color: #d20a11; /* Cor LETS */
             --radius: 12px;
             --grid-item-size: 320px; 
         }
@@ -29,6 +29,7 @@
             position: relative;
         }
 
+        /* Logo no canto superior esquerdo */
         .logo-lets {
             position: absolute;
             top: 3rem;
@@ -45,6 +46,7 @@
             }
         }
 
+        /* Header */
         header {
             display: flex; flex-direction: column; align-items: center;
             margin-bottom: 3rem; gap: 2rem; position: relative;
@@ -64,6 +66,7 @@
         }
         .history-btn:hover { border-color: var(--text-main); color: var(--text-main); }
 
+        /* Formulário de Inserção */
         .top-form {
             display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center;
             background-color: var(--bg-surface); padding: 0.8rem 1.2rem;
@@ -102,6 +105,9 @@
             .top-form input[type="text"], .top-form input[type="url"], .top-form input[type="file"] { width: 100%; }
         }
 
+        /* ==========================================
+           TOOLBAR (Centralização Exata dos Filtros)
+           ========================================== */
         .toolbar {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -139,6 +145,7 @@
             .grid-size-control { justify-self: center; }
         }
 
+        /* Ajuste de Tamanho (Slider e Botões +/-) */
         .size-btn {
             background: #222; border: none; color: #fff; 
             width: 26px; height: 26px; border-radius: 50%; 
@@ -162,6 +169,9 @@
         }
         .grid-size-control input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
 
+        /* ==========================================
+           MODO 1: GRID QUADRADO (PADRÃO)
+           ========================================== */
         .mood-board {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-item-size)), 1fr));
@@ -190,7 +200,6 @@
         .mood-item img { 
             width: 100%; height: 100%; object-fit: cover; display: block; 
             transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease; 
-            pointer-events: none;
         }
         .mood-item:hover img { transform: scale(1.08); filter: brightness(0.35); }
 
@@ -198,16 +207,14 @@
             width: 100%; height: 100%; background-color: #0a0a0a;
             transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s ease;
             display: flex; align-items: center; justify-content: center;
-            pointer-events: none;
         }
         .mood-item:hover .no-image-placeholder { transform: scale(1.08); background-color: #050505; }
         .no-image-placeholder span { color: var(--text-muted); font-size: 1.1rem; font-weight: 300; transition: opacity 0.3s ease; }
 
         .mood-overlay {
-            position: absolute; inset: 0;
+            position: absolute; inset: 0; pointer-events: none;
             background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 50%);
-            display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem 1.5rem;
-            pointer-events: none;
+            display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem 1.5rem; 
         }
         
         .overlay-category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 0.3rem; }
@@ -220,7 +227,7 @@
 
         .hidden-content-inner {
             overflow: hidden; opacity: 0; transform: translateY(10px);
-            transition: opacity 0.3s ease, transform 0.4s ease;
+            transition: opacity 0.3s ease, transform 0.4s ease; pointer-events: auto; 
         }
         .mood-item:hover .hidden-content-inner { opacity: 1; transform: translateY(0); padding-top: 1rem; transition-delay: 0.1s; }
 
@@ -229,12 +236,7 @@
             display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
         }
 
-        .card-actions { 
-            display: flex; gap: 1.2rem;
-            pointer-events: auto;
-            position: relative;
-            z-index: 10;
-        }
+        .card-actions { display: flex; gap: 1.2rem; pointer-events: auto; position: relative; z-index: 10; }
         .action-btn {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); 
             padding: 0.4rem 1rem; border-radius: 50px; cursor: pointer;
@@ -245,7 +247,9 @@
         .delete-btn { background: transparent; color: #888; border-color: transparent; } 
         .delete-btn:hover { color: var(--danger); background: transparent; border-color: transparent; }
 
-        /* ── LIST VIEW ─────────────────────────────────────────────────── */
+        /* ==========================================
+           MODO 2: LISTA (Ativado por JS quando < 200px)
+           ========================================== */
         .mood-board.list-view {
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 1rem;
@@ -274,8 +278,7 @@
 
         .mood-board.list-view .mood-overlay {
             position: static; background: none; padding: 0; display: flex; 
-            flex-direction: column; justify-content: center; flex: 1;
-            pointer-events: auto;
+            flex-direction: column; justify-content: center; flex: 1; pointer-events: auto;
         }
 
         .mood-board.list-view .mood-overlay > * {
@@ -298,7 +301,7 @@
         .mood-board.list-view .action-btn { background: #222; border-color: #333; padding: 0.3rem 0.8rem; font-size: 0.65rem; }
         .mood-board.list-view .delete-btn:hover { background: transparent; color: var(--danger); border-color: transparent;}
 
-        /* ── MODAIS ────────────────────────────────────────────────────── */
+        /* Modais */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
@@ -327,6 +330,7 @@
         .btn-danger { background: transparent; border: 1px solid var(--danger) !important; color: var(--danger); }
         .btn-danger:hover { background: var(--danger); color: #fff; }
 
+        /* Modal de Edição */
         .edit-box { max-width: 500px; text-align: left; }
         .edit-box h3 { text-align: center; margin-bottom: 1.5rem; }
         .edit-form-layout { display: flex; flex-direction: column; gap: 1rem; }
@@ -339,6 +343,7 @@
         .edit-form-layout textarea { resize: vertical; min-height: 80px; }
         .edit-form-layout small { color: #555; font-size: 0.75rem; margin-top: -0.5rem; }
 
+        /* Modal do Histórico */
         .history-box { max-width: 700px; text-align: left; display: flex; flex-direction: column; max-height: 80vh; }
         .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         .history-header button { background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
@@ -354,7 +359,7 @@
         .restore-btn { background: var(--text-main); color: var(--bg-base); border: none; padding: 0.4rem 1rem; border-radius: 50px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: all 0.2s ease; }
         .restore-btn:hover { background: var(--text-muted); color: #fff; }
         .empty-history { text-align: center; color: var(--text-muted); padding: 2rem 0; }
-
+        
         .loading-indicator {
             text-align: center; color: var(--text-muted); padding: 4rem 0;
             font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;
@@ -399,7 +404,6 @@
         </section>
     </main>
 
-    <!-- Modal de Edição -->
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-box edit-box">
             <h3>Editar Referência</h3>
@@ -417,7 +421,6 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmação de Exclusão -->
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>Excluir Referência?</h3>
@@ -429,7 +432,6 @@
         </div>
     </div>
 
-    <!-- Modal de Histórico/Backup -->
     <div id="history-modal" class="modal-overlay">
         <div class="modal-box history-box">
             <div class="history-header">
@@ -440,7 +442,6 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import {
@@ -461,7 +462,7 @@
         const app  = initializeApp(firebaseConfig);
         const db   = getFirestore(app);
 
-        const REFS_COL     = "references";
+        const REFS_COL   = "references";
         const HISTORY_COL  = "history";
 
         const form          = document.getElementById('ref-form');
@@ -520,10 +521,7 @@
         }
 
         async function addReference(data) {
-            const docRef = await addDoc(collection(db, REFS_COL), {
-                ...data,
-                createdAt: Date.now()
-            });
+            const docRef = await addDoc(collection(db, REFS_COL), { ...data, createdAt: Date.now() });
             return docRef.id;
         }
 
@@ -536,10 +534,7 @@
         }
 
         async function addHistory(data) {
-            const docRef = await addDoc(collection(db, HISTORY_COL), {
-                ...data,
-                deletedAt: Date.now()
-            });
+            const docRef = await addDoc(collection(db, HISTORY_COL), { ...data, deletedAt: Date.now() });
             return docRef.id;
         }
 
@@ -623,28 +618,34 @@
                     </div>
                 `;
 
-                // ✅ CORREÇÃO: eventos adicionados DEPOIS do innerHTML,
-                // diretamente nos elementos — sem inline onclick que conflita com o link
+                // Configura os botões de ação para evitar disparar o link da imagem
                 const editBtn = item.querySelector('.edit-btn');
                 const deleteBtn = item.querySelector('.delete-btn');
 
                 editBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    openEditModal(ref.id);
+                    window.openEditModal(ref.id);
                 });
 
                 deleteBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    promptDelete(ref.id);
+                    window.promptDelete(ref.id);
                 });
 
-                // ✅ CORREÇÃO: clique no card abre o link — só é bloqueado
-                // se o clique vier dos botões (stopPropagation acima)
-                if (ref.link) {
-                    item.addEventListener('click', () => {
-                        window.open(ref.link, '_blank', 'noopener,noreferrer');
-                    });
-                }
+                // ✅ CORREÇÃO AQUI: Garante que os links sempre abram de forma confiável
+                item.addEventListener('click', (e) => {
+                    // Evita disparos duplicados ou em áreas não intencionais
+                    if (e.target.closest('.card-actions')) return;
+                    
+                    if (ref.link) {
+                        let targetUrl = ref.link;
+                        // Força a existência de protocolo, para evitar que abra na mesma rota local
+                        if (!/^https?:\/\//i.test(targetUrl)) {
+                            targetUrl = 'http://' + targetUrl;
+                        }
+                        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                    }
+                });
 
                 board.appendChild(item);
             });
@@ -675,7 +676,6 @@
         });
 
         // ── Edit ──────────────────────────────────────────────────────────────
-        // ✅ CORREÇÃO: recebe só o id, sem o event (que não é mais necessário)
         window.openEditModal = function(id) {
             itemToEditId = id;
             const ref = references.find(r => r.id === id);
@@ -725,7 +725,6 @@
         });
 
         // ── Delete ────────────────────────────────────────────────────────────
-        // ✅ CORREÇÃO: recebe só o id, sem o event
         window.promptDelete = function(id) {
             itemToDeleteId = id;
             document.getElementById('delete-modal').classList.add('active');
