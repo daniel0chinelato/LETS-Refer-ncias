@@ -148,4 +148,681 @@
         /* Ajuste de Tamanho (Slider e Botões +/-) */
         .size-btn {
             background: #222; border: none; color: #fff; 
-            width: 26px; height
+            width: 26px; height: 26px; border-radius: 50%; 
+            cursor: pointer; font-weight: bold; display: flex; 
+            align-items: center; justify-content: center;
+            transition: background 0.2s ease;
+        }
+        .size-btn:hover { background: var(--brand-color); }
+
+        .grid-size-control input[type="range"] {
+            -webkit-appearance: none; width: 120px; background: transparent;
+        }
+        .grid-size-control input[type="range"]:focus { outline: none; }
+        .grid-size-control input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; background: #333; border-radius: 2px;
+        }
+        .grid-size-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%;
+            background: var(--text-main); margin-top: -5px; cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .grid-size-control input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+        /* ==========================================
+           MODO 1: GRID QUADRADO (PADRÃO)
+           ========================================== */
+
+        .mood-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-item-size)), 1fr));
+            gap: 1.5rem; max-width: 1800px; margin: 0 auto;
+        }
+
+        .mood-item {
+            aspect-ratio: 1 / 1; position: relative; border-radius: var(--radius); 
+            overflow: hidden; background-color: var(--bg-surface);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease;
+            opacity: 0; animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUpFade { 
+            from { opacity: 0; transform: translateY(40px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        .mood-item.has-link { cursor: pointer; }
+        
+        .mood-item:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05); z-index: 2;
+        }
+
+        .mood-item img { 
+            width: 100%; height: 100%; object-fit: cover; display: block; 
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease; 
+            pointer-events: none;
+        }
+        .mood-item:hover img { transform: scale(1.08); filter: brightness(0.35); }
+
+        .no-image-placeholder {
+            width: 100%; height: 100%; background-color: #0a0a0a;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s ease;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        .mood-item:hover .no-image-placeholder { transform: scale(1.08); background-color: #050505; }
+        .no-image-placeholder span { color: var(--text-muted); font-size: 1.1rem; font-weight: 300; transition: opacity 0.3s ease; }
+
+        /* Nova Camada Nativa de Link (Invisível) */
+        .native-link-overlay {
+            position: absolute; inset: 0; z-index: 5;
+            cursor: pointer;
+        }
+
+        .mood-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 50%);
+            display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem 1.5rem;
+            pointer-events: none;
+            z-index: 6;
+        }
+        
+        .overlay-category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 0.3rem; }
+        .mood-overlay h3 { font-size: 1.4rem; font-weight: normal; margin-bottom: 0; color: var(--text-main); line-height: 1.2; }
+
+        .hidden-content {
+            display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .mood-item:hover .hidden-content { grid-template-rows: 1fr; }
+
+        .hidden-content-inner {
+            overflow: hidden; opacity: 0; transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.4s ease;
+        }
+        .mood-item:hover .hidden-content-inner { opacity: 1; transform: translateY(0); padding-top: 1rem; transition-delay: 0.1s; }
+
+        .overlay-desc {
+            font-size: 0.85rem; color: #ccc; margin-bottom: 1.5rem; line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .card-actions { 
+            display: flex; gap: 1.2rem;
+            pointer-events: auto;
+            position: relative;
+            z-index: 10;
+        }
+        .action-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); 
+            padding: 0.4rem 1rem; border-radius: 50px; cursor: pointer;
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+            font-family: inherit; transition: all 0.3s ease; backdrop-filter: blur(5px); color: #fff;
+        }
+        .action-btn:hover { background: #fff; color: #000; }
+        .delete-btn { background: transparent; color: #888; border-color: transparent; } 
+        .delete-btn:hover { color: var(--danger); background: transparent; border-color: transparent; }
+
+        /* ── LIST VIEW ─────────────────────────────────────────────────── */
+        .mood-board.list-view {
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1rem;
+        }
+
+        .mood-board.list-view .mood-item {
+            aspect-ratio: auto; display: flex; flex-direction: row; 
+            align-items: stretch; padding: 0.8rem; gap: 1.2rem; min-height: 110px;
+        }
+
+        .mood-board.list-view .mood-item:hover { transform: translateY(-4px); }
+
+        .mood-board.list-view .mood-item img,
+        .mood-board.list-view .no-image-placeholder {
+            width: 90px; height: 90px; border-radius: 8px; 
+            flex-shrink: 0; position: static;
+        }
+        
+        .mood-board.list-view .no-image-placeholder { padding: 0.5rem; }
+        .mood-board.list-view .no-image-placeholder span { font-size: 0.8rem; }
+
+        .mood-board.list-view .mood-item:hover img,
+        .mood-board.list-view .mood-item:hover .no-image-placeholder {
+            transform: scale(1.03); filter: brightness(0.9);
+        }
+
+        .mood-board.list-view .mood-overlay {
+            position: static; background: none; padding: 0; display: flex; 
+            flex-direction: column; justify-content: center; flex: 1;
+            pointer-events: auto;
+        }
+
+        .mood-board.list-view .mood-overlay > * {
+            transform: translateY(0) !important; opacity: 1 !important; transition: none !important;
+        }
+
+        .mood-board.list-view .overlay-category { margin-bottom: 0.2rem; font-size: 0.65rem; }
+        .mood-board.list-view h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+
+        .mood-board.list-view .hidden-content { grid-template-rows: 1fr; }
+        .mood-board.list-view .hidden-content-inner {
+            opacity: 1; transform: translateY(0); padding-top: 0; display: flex; flex-direction: column; gap: 0.4rem;
+        }
+
+        .mood-board.list-view .overlay-desc {
+            -webkit-line-clamp: 2; margin-bottom: 0.5rem; font-size: 0.8rem; color: #aaa;
+        }
+
+        .mood-board.list-view .card-actions { gap: 0.8rem; }
+        .mood-board.list-view .action-btn { background: #222; border-color: #333; padding: 0.3rem 0.8rem; font-size: 0.65rem; }
+        .mood-board.list-view .delete-btn:hover { background: transparent; color: var(--danger); border-color: transparent;}
+
+        /* ── MODAIS ────────────────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .modal-box {
+            background: var(--bg-surface); padding: 2.5rem; border-radius: var(--radius);
+            width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 1px solid #222; text-align: center; transform: translateY(20px); transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        .modal-box h3 { margin-bottom: 0.5rem; font-weight: normal; }
+        
+        .modal-actions { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+        .modal-actions button {
+            padding: 0.6rem 1.5rem; border-radius: 50px; border: none; cursor: pointer;
+            font-family: inherit; font-weight: bold; transition: all 0.2s ease;
+        }
+        .btn-cancel { background: #333; color: var(--text-main); }
+        .btn-cancel:hover { background: #444; }
+        .btn-primary { background: var(--text-main); color: var(--bg-base); }
+        .btn-primary:hover { background: #ccc; }
+        .btn-danger { background: transparent; border: 1px solid var(--danger) !important; color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: #fff; }
+
+        .edit-box { max-width: 500px; text-align: left; }
+        .edit-box h3 { text-align: center; margin-bottom: 1.5rem; }
+        .edit-form-layout { display: flex; flex-direction: column; gap: 1rem; }
+        .edit-form-layout label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: -0.5rem; }
+        .edit-form-layout input, .edit-form-layout textarea {
+            background: #111; border: 1px solid #333; color: #fff; padding: 0.8rem;
+            border-radius: 8px; font-family: inherit; font-size: 0.95rem; width: 100%;
+        }
+        .edit-form-layout input:focus, .edit-form-layout textarea:focus { border-color: #666; outline: none; }
+        .edit-form-layout textarea { resize: vertical; min-height: 80px; }
+        .edit-form-layout small { color: #555; font-size: 0.75rem; margin-top: -0.5rem; }
+
+        .history-box { max-width: 700px; text-align: left; display: flex; flex-direction: column; max-height: 80vh; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .history-header button { background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+        .history-header button:hover { color: #fff; }
+        .history-list { list-style: none; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 1rem; }
+        .history-list::-webkit-scrollbar { width: 6px; }
+        .history-list::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .history-item { background: #0a0a0a; padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #1a1a1a; gap: 1rem; }
+        .history-info strong { display: block; margin-bottom: 0.2rem; font-weight: normal; }
+        .history-info span { font-size: 0.75rem; background: #222; padding: 2px 6px; border-radius: 4px; margin-right: 5px; color: var(--text-muted); }
+        .history-info a { color: var(--text-muted); font-size: 0.8rem; text-decoration: none; }
+        .history-info a:hover { color: #fff; text-decoration: underline; }
+        .restore-btn { background: var(--text-main); color: var(--bg-base); border: none; padding: 0.4rem 1rem; border-radius: 50px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: all 0.2s ease; }
+        .restore-btn:hover { background: var(--text-muted); color: #fff; }
+        .empty-history { text-align: center; color: var(--text-muted); padding: 2rem 0; }
+
+        .loading-indicator {
+            text-align: center; color: var(--text-muted); padding: 4rem 0;
+            font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <img src="lets.png" alt="LETS" class="logo-lets">
+
+    <header>
+        <div class="header-top">
+            <h1>Referências</h1>
+            <button class="history-btn" onclick="openHistoryModal()">Histórico de Backup</button>
+        </div>
+        
+        <form id="ref-form" class="top-form">
+            <input type="text" id="ref-title" placeholder="Título" required>
+            <input type="text" id="ref-category" list="categories-list" placeholder="Seção (ex: Site)" required>
+            <datalist id="categories-list"></datalist>
+            <input type="text" id="ref-desc" placeholder="Descrição (opcional)">
+            <input type="url" id="ref-link" placeholder="Link (opcional)">
+            <input type="file" id="ref-image" accept="image/*">
+            <button type="submit">Salvar</button>
+        </form>
+    </header>
+
+    <div class="toolbar">
+        <nav class="filters" id="filters-nav"></nav>
+        
+        <div class="grid-size-control">
+            <label style="margin-right: 5px;">Tamanho</label>
+            <button class="size-btn" onclick="changeSize(-50)">-</button>
+            <input type="range" id="grid-slider" min="100" max="600" step="10" value="320">
+            <button class="size-btn" onclick="changeSize(50)">+</button>
+        </div>
+    </div>
+
+    <main>
+        <section class="mood-board" id="mood-board">
+            <div class="loading-indicator" id="loading-msg" style="grid-column: 1/-1;">Carregando...</div>
+        </section>
+    </main>
+
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-box edit-box">
+            <h3>Editar Referência</h3>
+            <form id="edit-form" class="edit-form-layout">
+                <div><label>Título</label><input type="text" id="edit-title" required></div>
+                <div><label>Seção/Categoria</label><input type="text" id="edit-category" list="categories-list" required></div>
+                <div><label>Descrição</label><textarea id="edit-desc" rows="2"></textarea></div>
+                <div><label>Link (URL)</label><input type="url" id="edit-link"></div>
+                <div><label>Atualizar Imagem</label><input type="file" id="edit-image" accept="image/*"><small>Deixe em branco para manter a atual.</small></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Excluir Referência?</h3>
+            <p style="color:#888; margin-bottom:2rem; font-size:0.9rem;">O link será movido para o seu histórico.</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
+                <button class="btn-danger" onclick="confirmDelete()">Sim, Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="history-modal" class="modal-overlay">
+        <div class="modal-box history-box">
+            <div class="history-header">
+                <h3>Histórico de Backup</h3>
+                <button onclick="closeHistoryModal()">✕</button>
+            </div>
+            <ul class="history-list" id="history-list"></ul>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getFirestore, collection, doc,
+            getDocs, addDoc, updateDoc, deleteDoc,
+            query, orderBy
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiAp5UJ4G4ZLBvTGRrT7f-fHYcV3lE7wU",
+            authDomain: "lets-refs.firebaseapp.com",
+            projectId: "lets-refs",
+            storageBucket: "lets-refs.firebasestorage.app",
+            messagingSenderId: "339020875724",
+            appId: "1:339020875724:web:3beb73dc13e1a416f23f69"
+        };
+
+        const app  = initializeApp(firebaseConfig);
+        const db   = getFirestore(app);
+
+        const REFS_COL   = "references";
+        const HISTORY_COL  = "history";
+
+        const form          = document.getElementById('ref-form');
+        const editForm      = document.getElementById('edit-form');
+        const board         = document.getElementById('mood-board');
+        const filtersNav    = document.getElementById('filters-nav');
+        const categoriesList= document.getElementById('categories-list');
+        const gridSlider    = document.getElementById('grid-slider');
+        const loadingMsg    = document.getElementById('loading-msg');
+
+        const baseCategories = ['Animação', 'Logo', 'Site', 'Tipografia'];
+
+        let references  = [];
+        let historyData = [];
+
+        let itemToDeleteId = null;
+        let itemToEditId   = null;
+        let currentFilter  = 'Todos';
+
+        // ── Grid / slider ─────────────────────────────────────────────────────
+        function updateLayoutMode(size) {
+            if (size <= 200) board.classList.add('list-view');
+            else board.classList.remove('list-view');
+        }
+
+        window.changeSize = function(delta) {
+            let newSize = Math.max(100, Math.min(600, parseInt(gridSlider.value) + delta));
+            gridSlider.value = newSize;
+            document.documentElement.style.setProperty('--grid-item-size', `${newSize}px`);
+            updateLayoutMode(newSize);
+            localStorage.setItem('myCleanBoardGridSize', newSize);
+        };
+
+        const savedGridSize = localStorage.getItem('myCleanBoardGridSize') || '320';
+        gridSlider.value = savedGridSize;
+        document.documentElement.style.setProperty('--grid-item-size', `${savedGridSize}px`);
+        updateLayoutMode(parseInt(savedGridSize));
+
+        gridSlider.addEventListener('input', e => {
+            document.documentElement.style.setProperty('--grid-item-size', `${e.target.value}px`);
+            updateLayoutMode(parseInt(e.target.value));
+        });
+        gridSlider.addEventListener('change', e => localStorage.setItem('myCleanBoardGridSize', e.target.value));
+
+        // ── Firestore helpers ─────────────────────────────────────────────────
+        async function loadReferences() {
+            const q = query(collection(db, REFS_COL), orderBy("createdAt", "desc"));
+            const snap = await getDocs(q);
+            references = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+
+        async function loadHistory() {
+            const q = query(collection(db, HISTORY_COL), orderBy("deletedAt", "desc"));
+            const snap = await getDocs(q);
+            historyData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+
+        async function addReference(data) {
+            const docRef = await addDoc(collection(db, REFS_COL), {
+                ...data,
+                createdAt: Date.now()
+            });
+            return docRef.id;
+        }
+
+        async function updateReference(id, data) {
+            await updateDoc(doc(db, REFS_COL, id), data);
+        }
+
+        async function deleteReference(id) {
+            await deleteDoc(doc(db, REFS_COL, id));
+        }
+
+        async function addHistory(data) {
+            const docRef = await addDoc(collection(db, HISTORY_COL), {
+                ...data,
+                deletedAt: Date.now()
+            });
+            return docRef.id;
+        }
+
+        async function deleteHistory(id) {
+            await deleteDoc(doc(db, HISTORY_COL, id));
+        }
+
+        // ── UI helpers ────────────────────────────────────────────────────────
+        function updateCategoriesAndFilters() {
+            const savedCategories = references.map(r => r.category);
+            const uniqueCategories = [...new Set([...baseCategories, ...savedCategories])].sort();
+
+            categoriesList.innerHTML = uniqueCategories.map(cat => `<option value="${cat}"></option>`).join('');
+
+            let filtersHTML = `<button class="filter-btn ${currentFilter === 'Todos' ? 'active' : ''}" onclick="setFilter('Todos')">Todos</button>`;
+            uniqueCategories.forEach(cat => {
+                filtersHTML += `<button class="filter-btn ${currentFilter === cat ? 'active' : ''}" onclick="setFilter('${cat}')">${cat}</button>`;
+            });
+            filtersNav.innerHTML = filtersHTML;
+        }
+
+        window.setFilter = function(category) {
+            currentFilter = category;
+            updateCategoriesAndFilters();
+            renderBoard();
+        };
+
+        function processImageFile(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1080;
+                    let width = img.width, height = img.height;
+                    if (width > MAX_WIDTH || height > MAX_WIDTH) {
+                        if (width > height) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
+                        else { width = Math.round((width * MAX_WIDTH) / height); height = MAX_WIDTH; }
+                    }
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    callback(canvas.toDataURL('image/jpeg', 0.85));
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderBoard() {
+            board.innerHTML = '';
+            const filteredRefs = currentFilter === 'Todos' ? references : references.filter(r => r.category === currentFilter);
+
+            if (filteredRefs.length === 0) {
+                board.innerHTML = '<div class="loading-indicator" style="grid-column:1/-1;">Nenhuma referência encontrada.</div>';
+                return;
+            }
+
+            filteredRefs.forEach((ref, index) => {
+                const item = document.createElement('div');
+                item.className = ref.link ? 'mood-item has-link' : 'mood-item';
+                item.style.animationDelay = `${Math.min(index * 0.08, 1.5)}s`;
+
+                const mediaContent = ref.image
+                    ? `<img src="${ref.image}" alt="${ref.title}">`
+                    : `<div class="no-image-placeholder"><span>REF</span></div>`;
+
+                // ✅ ABORDAGEM INFALÍVEL: Usar a tag nativa de link <a> por cima da imagem
+                let targetUrl = ref.link ? ref.link.trim() : '';
+                if (targetUrl && !/^https?:\/\//i.test(targetUrl)) {
+                    targetUrl = 'http://' + targetUrl;
+                }
+                const linkLayer = targetUrl ? `<a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="native-link-overlay"></a>` : '';
+
+                item.innerHTML = `
+                    ${mediaContent}
+                    ${linkLayer}
+                    <div class="mood-overlay">
+                        <span class="overlay-category">${ref.category}</span>
+                        <h3>${ref.title}</h3>
+                        <div class="hidden-content">
+                            <div class="hidden-content-inner">
+                                ${ref.description ? `<p class="overlay-desc">${ref.description}</p>` : ''}
+                                <div class="card-actions">
+                                    <button class="action-btn edit-btn">Editar</button>
+                                    <button class="action-btn delete-btn">Remover</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Eventos diretamente nos botões, parando a propagação para não abrir o link junto
+                const editBtn = item.querySelector('.edit-btn');
+                const deleteBtn = item.querySelector('.delete-btn');
+
+                editBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openEditModal(ref.id);
+                });
+
+                deleteBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    promptDelete(ref.id);
+                });
+
+                board.appendChild(item);
+            });
+        }
+
+        // ── Add ───────────────────────────────────────────────────────────────
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title     = document.getElementById('ref-title').value;
+            const link      = document.getElementById('ref-link').value.trim() || null;
+            const desc      = document.getElementById('ref-desc').value;
+            const imageFile = document.getElementById('ref-image').files[0];
+            let category    = document.getElementById('ref-category').value.trim();
+            category = category.charAt(0).toUpperCase() + category.slice(1);
+
+            const saveReference = async (imageData) => {
+                const newRef = { title, category, description: desc, link, image: imageData || null };
+                const newId  = await addReference(newRef);
+                references.unshift({ id: newId, ...newRef });
+                form.reset();
+                currentFilter = category;
+                updateCategoriesAndFilters();
+                renderBoard();
+            };
+
+            if (imageFile) processImageFile(imageFile, saveReference);
+            else saveReference(null);
+        });
+
+        // ── Edit ──────────────────────────────────────────────────────────────
+        window.openEditModal = function(id) {
+            itemToEditId = id;
+            const ref = references.find(r => r.id === id);
+            if (!ref) return;
+            document.getElementById('edit-title').value    = ref.title;
+            document.getElementById('edit-category').value = ref.category;
+            document.getElementById('edit-desc').value     = ref.description || '';
+            document.getElementById('edit-link').value     = ref.link || '';
+            document.getElementById('edit-image').value    = '';
+            document.getElementById('edit-modal').classList.add('active');
+        };
+
+        window.closeEditModal = function() {
+            document.getElementById('edit-modal').classList.remove('active');
+            itemToEditId = null;
+        };
+
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!itemToEditId) return;
+
+            const index = references.findIndex(r => r.id === itemToEditId);
+            if (index === -1) return;
+
+            const newTitle     = document.getElementById('edit-title').value;
+            const newLink      = document.getElementById('edit-link').value.trim() || null;
+            const newDesc      = document.getElementById('edit-desc').value;
+            let newCategory    = document.getElementById('edit-category').value.trim();
+            newCategory = newCategory.charAt(0).toUpperCase() + newCategory.slice(1);
+            const newImageFile = document.getElementById('edit-image').files[0];
+
+            const finalizeEdit = async (imgData) => {
+                const updatedFields = {
+                    title: newTitle, category: newCategory,
+                    description: newDesc, link: newLink,
+                    ...(imgData !== undefined && { image: imgData })
+                };
+                await updateReference(itemToEditId, updatedFields);
+                references[index] = { ...references[index], ...updatedFields };
+                updateCategoriesAndFilters();
+                renderBoard();
+                closeEditModal();
+            };
+
+            if (newImageFile) processImageFile(newImageFile, finalizeEdit);
+            else finalizeEdit(undefined);
+        });
+
+        // ── Delete ────────────────────────────────────────────────────────────
+        window.promptDelete = function(id) {
+            itemToDeleteId = id;
+            document.getElementById('delete-modal').classList.add('active');
+        };
+
+        window.closeDeleteModal = function() {
+            document.getElementById('delete-modal').classList.remove('active');
+            itemToDeleteId = null;
+        };
+
+        window.confirmDelete = async function() {
+            if (itemToDeleteId === null) return;
+            const index = references.findIndex(r => r.id === itemToDeleteId);
+            if (index > -1) {
+                const [removed] = references.splice(index, 1);
+                const { id: _oldId, createdAt: _ct, ...refData } = removed;
+                await deleteReference(itemToDeleteId);
+                const newHistId = await addHistory(refData);
+                historyData.unshift({ id: newHistId, ...refData });
+                updateCategoriesAndFilters();
+                renderBoard();
+            }
+            closeDeleteModal();
+        };
+
+        // ── History ───────────────────────────────────────────────────────────
+        window.openHistoryModal = function() {
+            renderHistory();
+            document.getElementById('history-modal').classList.add('active');
+        };
+        window.closeHistoryModal = function() {
+            document.getElementById('history-modal').classList.remove('active');
+        };
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+            if (historyData.length === 0) {
+                list.innerHTML = '<p class="empty-history">Seu histórico está vazio.</p>';
+                return;
+            }
+            historyData.forEach((item, index) => {
+                list.innerHTML += `
+                    <li class="history-item">
+                        <div class="history-info">
+                            <strong>${item.title}</strong>
+                            <span>${item.category}</span>
+                            ${item.link ? `<a href="${item.link}" target="_blank">${item.link}</a>` : '<em>Sem link</em>'}
+                        </div>
+                        <button class="restore-btn" onclick="restoreItem(${index})">Restaurar</button>
+                    </li>`;
+            });
+        }
+
+        window.restoreItem = async function(index) {
+            const [item] = historyData.splice(index, 1);
+            const { id: oldHistId, deletedAt: _dt, ...refData } = item;
+            await deleteHistory(oldHistId);
+            const newRefId = await addReference(refData);
+            references.unshift({ id: newRefId, ...refData });
+            updateCategoriesAndFilters();
+            renderHistory();
+            renderBoard();
+        };
+
+        // ── Fechar modais clicando no backdrop ────────────────────────────────
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+        });
+
+        // ── Init ──────────────────────────────────────────────────────────────
+        async function init() {
+            await Promise.all([loadReferences(), loadHistory()]);
+            if (loadingMsg) loadingMsg.remove();
+            updateCategoriesAndFilters();
+            renderBoard();
+        }
+
+        init().catch(err => {
+            console.error("Erro ao conectar ao Firebase:", err);
+            if (loadingMsg) loadingMsg.textContent = "Erro ao carregar dados. Verifique o console.";
+        });
+    </script>
+</body>
+</html>
