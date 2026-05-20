@@ -93,18 +93,48 @@
         .overlay-desc { font-size: 0.85rem; color: #ccc; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
         .card-actions { display: flex; gap: 1rem; }
         .action-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem 1rem; border-radius: 50px; cursor: pointer; font-size: 0.7rem; text-transform: uppercase; color: #fff; transition: 0.3s; backdrop-filter: blur(5px); }
-        .action-btn:hover { background: #fff; color: #000; }
+        .action-btn:hover { background: var(--brand-color); border-color: var(--brand-color); color: #fff; }
 
-        /* Modo 2: Painel Semântico (INFINITO E FLUIDO) */
-        #view-painel .mood-item { aspect-ratio: auto; margin-bottom: 1.5rem; break-inside: avoid; display: inline-block; width: 100%; }
+        /* Modo 2: Painel Semântico (SCROLL HORIZONTAL INFINITO VERDADEIRO) */
+        .painel-scroll-area {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 2rem;
+        }
+
+        /* Estilização da barra de rolagem horizontal */
+        .painel-scroll-area::-webkit-scrollbar { height: 8px; }
+        .painel-scroll-area::-webkit-scrollbar-track { background: #111; border-radius: 10px; }
+        .painel-scroll-area::-webkit-scrollbar-thumb { background: var(--brand-color); border-radius: 10px; }
+
+        #view-painel .mood-board {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap; /* Faz quebrar para a próxima coluna direita infinitamente */
+            align-content: flex-start;
+            height: 65vh; /* Trava a altura pra forçar o crescimento horizontal */
+            gap: 1.5rem;
+        }
+
+        #view-painel .mood-item {
+            aspect-ratio: auto;
+            width: 280px; 
+            height: auto;
+            max-height: 100%;
+            flex: 0 0 auto;
+            display: block;
+            margin-bottom: 0;
+        }
         
-        /* A MÁGICA: column-width em vez de column-count cria colunas infinitas baseadas no tamanho da tela */
-        #view-painel .mood-board { display: block; column-width: 280px; column-gap: 1.5rem; max-width: 100%; }
-        
+        #view-painel .mood-item img {
+            width: 100%; height: auto; object-fit: contain; border-radius: var(--radius);
+        }
+
         #view-painel .mood-overlay { opacity: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; transition: 0.3s; }
         #view-painel .mood-item:hover .mood-overlay { opacity: 1; pointer-events: auto; }
         
-        .empty-state { text-align: center; color: #555; padding: 5rem 0; font-size: 1.2rem; grid-column: 1 / -1; }
+        .empty-state { text-align: center; color: #555; padding: 5rem 0; font-size: 1.2rem; width: 100%; }
 
         /* Responsividade */
         @media (max-width: 900px) {
@@ -161,10 +191,13 @@
         <main><section class="mood-board" id="board-referencias"></section></main>
     </div>
 
-    <!-- VIEW 2: PAINEL SEMÂNTICO -->
+    <!-- VIEW 2: PAINEL SEMÂNTICO (TELA INFINITA HORIZONTAL) -->
     <div id="view-painel" style="display: none;">
-        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Arraste ou cole (Ctrl+V) imagens aqui para criar seu painel infinito.</p>
-        <main><section class="mood-board" id="board-painel"></section></main>
+        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Arraste ou cole (Ctrl+V) imagens aqui para criar seu painel infinito. Role para a direita.</p>
+        
+        <div class="painel-scroll-area">
+            <section class="mood-board" id="board-painel"></section>
+        </div>
     </div>
 
     <script>
@@ -267,39 +300,71 @@
         }
 
         // ==========================================
-        // PROCESSAMENTO E BANCO DE DADOS
+        // PROCESSAMENTO DE COMPRESSÃO E BANCO DE DADOS
         // ==========================================
         function processAndSaveImage(file, targetMode, textData = null) {
             const reader = new FileReader();
-            reader.onload = async function(event) {
-                const base64Image = event.target.result;
-                
-                if (useFirebase) {
-                    try {
-                        const fileRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
-                        await fileRef.put(file);
-                        const downloadURL = await fileRef.getDownloadURL();
-                        
-                        if (targetMode === 'painel') {
-                            await db.collection('moodboard').add({ url: downloadURL, timestamp: Date.now() });
-                            painelData.unshift({ id: Date.now(), image: downloadURL }); 
-                        } else {
-                            const newDoc = { ...textData, image: downloadURL, timestamp: Date.now() };
-                            await db.collection('referencias').add(newDoc);
-                            refsData.unshift({ id: Date.now(), ...newDoc });
-                        }
-                    } catch(e) { console.error("Erro ao subir Firebase", e); }
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = async function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1200; // Mantém a nitidez mas elimina o peso extra
+                    let width = img.width; let height = img.height;
                     
-                } else {
-                    if (targetMode === 'painel') {
-                        painelData.unshift({ id: Date.now(), image: base64Image });
-                        localStorage.setItem('lets_painel', JSON.stringify(painelData));
-                    } else {
-                        refsData.unshift({ id: Date.now(), ...textData, image: base64Image });
-                        localStorage.setItem('lets_refs', JSON.stringify(refsData));
+                    if (width > MAX_WIDTH || height > MAX_WIDTH) { 
+                        if (width > height) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        } else {
+                            width = Math.round((width * MAX_WIDTH) / height);
+                            height = MAX_WIDTH;
+                        }
                     }
-                }
-                renderBoards();
+                    
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // COMPRESSÃO MÁGICA: Converte pra JPEG a 75%. Reduz o peso da imagem crua em ~90%
+                    const compressedImage = canvas.toDataURL('image/jpeg', 0.75);
+
+                    if (useFirebase) {
+                        try {
+                            const fileRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
+                            await fileRef.putString(compressedImage, 'data_url');
+                            const downloadURL = await fileRef.getDownloadURL();
+                            
+                            if (targetMode === 'painel') {
+                                await db.collection('moodboard').add({ url: downloadURL, timestamp: Date.now() });
+                                painelData.unshift({ id: Date.now(), image: downloadURL }); 
+                            } else {
+                                const newDoc = { ...textData, image: downloadURL, timestamp: Date.now() };
+                                await db.collection('referencias').add(newDoc);
+                                refsData.unshift({ id: Date.now(), ...newDoc });
+                            }
+                        } catch(e) { console.error("Erro ao subir Firebase", e); }
+                    } else {
+                        if (targetMode === 'painel') {
+                            painelData.unshift({ id: Date.now(), image: compressedImage });
+                            try {
+                                localStorage.setItem('lets_painel', JSON.stringify(painelData));
+                            } catch (err) {
+                                painelData.shift(); // Remove a que não coube
+                                alert("⚠️ Limite do navegador atingido! Conecte as chaves do Firebase para ter espaço infinito.");
+                            }
+                        } else {
+                            refsData.unshift({ id: Date.now(), ...textData, image: compressedImage });
+                            try {
+                                localStorage.setItem('lets_refs', JSON.stringify(refsData));
+                            } catch(err) {
+                                refsData.shift();
+                                alert("⚠️ Limite do navegador atingido! Conecte as chaves do Firebase.");
+                            }
+                        }
+                    }
+                    renderBoards();
+                };
+                img.src = event.target.result;
             };
             reader.readAsDataURL(file);
         }
