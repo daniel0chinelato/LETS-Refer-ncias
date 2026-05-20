@@ -190,6 +190,7 @@
         .mood-item img { 
             width: 100%; height: 100%; object-fit: cover; display: block; 
             transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease; 
+            pointer-events: none;
         }
         .mood-item:hover img { transform: scale(1.08); filter: brightness(0.35); }
 
@@ -197,14 +198,16 @@
             width: 100%; height: 100%; background-color: #0a0a0a;
             transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s ease;
             display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
         }
         .mood-item:hover .no-image-placeholder { transform: scale(1.08); background-color: #050505; }
         .no-image-placeholder span { color: var(--text-muted); font-size: 1.1rem; font-weight: 300; transition: opacity 0.3s ease; }
 
         .mood-overlay {
-            position: absolute; inset: 0; pointer-events: none;
+            position: absolute; inset: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 50%);
-            display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem 1.5rem; 
+            display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem 1.5rem;
+            pointer-events: none;
         }
         
         .overlay-category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 0.3rem; }
@@ -217,7 +220,7 @@
 
         .hidden-content-inner {
             overflow: hidden; opacity: 0; transform: translateY(10px);
-            transition: opacity 0.3s ease, transform 0.4s ease; pointer-events: auto; 
+            transition: opacity 0.3s ease, transform 0.4s ease;
         }
         .mood-item:hover .hidden-content-inner { opacity: 1; transform: translateY(0); padding-top: 1rem; transition-delay: 0.1s; }
 
@@ -226,7 +229,12 @@
             display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
         }
 
-        .card-actions { display: flex; gap: 1.2rem; }
+        .card-actions { 
+            display: flex; gap: 1.2rem;
+            pointer-events: auto;
+            position: relative;
+            z-index: 10;
+        }
         .action-btn {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); 
             padding: 0.4rem 1rem; border-radius: 50px; cursor: pointer;
@@ -237,6 +245,7 @@
         .delete-btn { background: transparent; color: #888; border-color: transparent; } 
         .delete-btn:hover { color: var(--danger); background: transparent; border-color: transparent; }
 
+        /* ── LIST VIEW ─────────────────────────────────────────────────── */
         .mood-board.list-view {
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 1rem;
@@ -265,7 +274,8 @@
 
         .mood-board.list-view .mood-overlay {
             position: static; background: none; padding: 0; display: flex; 
-            flex-direction: column; justify-content: center; flex: 1; pointer-events: auto;
+            flex-direction: column; justify-content: center; flex: 1;
+            pointer-events: auto;
         }
 
         .mood-board.list-view .mood-overlay > * {
@@ -288,6 +298,7 @@
         .mood-board.list-view .action-btn { background: #222; border-color: #333; padding: 0.3rem 0.8rem; font-size: 0.65rem; }
         .mood-board.list-view .delete-btn:hover { background: transparent; color: var(--danger); border-color: transparent;}
 
+        /* ── MODAIS ────────────────────────────────────────────────────── */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
@@ -586,54 +597,10 @@
                 return;
             }
 
-           filteredRefs.forEach((ref, index) => {
-    const item = document.createElement('div');
-    item.className = ref.link ? 'mood-item has-link' : 'mood-item';
-    item.style.animationDelay = `${Math.min(index * 0.08, 1.5)}s`;
-
-    const mediaContent = ref.image
-        ? `<img src="${ref.image}" alt="${ref.title}">`
-        : `<div class="no-image-placeholder"><span>REF</span></div>`;
-
-    item.innerHTML = `
-        ${mediaContent}
-        <div class="mood-overlay">
-            <span class="overlay-category">${ref.category}</span>
-            <h3>${ref.title}</h3>
-            <div class="hidden-content">
-                <div class="hidden-content-inner">
-                    ${ref.description ? `<p class="overlay-desc">${ref.description}</p>` : ''}
-                    <div class="card-actions">
-                        <button class="action-btn edit-btn">Editar</button>
-                        <button class="action-btn delete-btn">Remover</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // ✅ Eventos adicionados DEPOIS do innerHTML, nos elementos corretos
-    const editBtn = item.querySelector('.edit-btn');
-    const deleteBtn = item.querySelector('.delete-btn');
-
-    editBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openEditModal(e, ref.id);
-    });
-
-    deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        promptDelete(e, ref.id);
-    });
-
-    if (ref.link) {
-        item.addEventListener('click', () => {
-            window.open(ref.link, '_blank', 'noopener,noreferrer');
-        });
-    }
-
-    board.appendChild(item);
-});
+            filteredRefs.forEach((ref, index) => {
+                const item = document.createElement('div');
+                item.className = ref.link ? 'mood-item has-link' : 'mood-item';
+                item.style.animationDelay = `${Math.min(index * 0.08, 1.5)}s`;
 
                 const mediaContent = ref.image
                     ? `<img src="${ref.image}" alt="${ref.title}">`
@@ -648,13 +615,37 @@
                             <div class="hidden-content-inner">
                                 ${ref.description ? `<p class="overlay-desc">${ref.description}</p>` : ''}
                                 <div class="card-actions">
-                                    <button class="action-btn edit-btn" onclick="openEditModal(event, '${ref.id}')">Editar</button>
-                                    <button class="action-btn delete-btn" onclick="promptDelete(event, '${ref.id}')">Remover</button>
+                                    <button class="action-btn edit-btn">Editar</button>
+                                    <button class="action-btn delete-btn">Remover</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
+
+                // ✅ CORREÇÃO: eventos adicionados DEPOIS do innerHTML,
+                // diretamente nos elementos — sem inline onclick que conflita com o link
+                const editBtn = item.querySelector('.edit-btn');
+                const deleteBtn = item.querySelector('.delete-btn');
+
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openEditModal(ref.id);
+                });
+
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    promptDelete(ref.id);
+                });
+
+                // ✅ CORREÇÃO: clique no card abre o link — só é bloqueado
+                // se o clique vier dos botões (stopPropagation acima)
+                if (ref.link) {
+                    item.addEventListener('click', () => {
+                        window.open(ref.link, '_blank', 'noopener,noreferrer');
+                    });
+                }
+
                 board.appendChild(item);
             });
         }
@@ -663,7 +654,6 @@
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             const title     = document.getElementById('ref-title').value;
-            // FIX: trim e converte string vazia para null
             const link      = document.getElementById('ref-link').value.trim() || null;
             const desc      = document.getElementById('ref-desc').value;
             const imageFile = document.getElementById('ref-image').files[0];
@@ -685,8 +675,8 @@
         });
 
         // ── Edit ──────────────────────────────────────────────────────────────
-        window.openEditModal = function(event, id) {
-            event.stopPropagation();
+        // ✅ CORREÇÃO: recebe só o id, sem o event (que não é mais necessário)
+        window.openEditModal = function(id) {
             itemToEditId = id;
             const ref = references.find(r => r.id === id);
             if (!ref) return;
@@ -710,11 +700,10 @@
             const index = references.findIndex(r => r.id === itemToEditId);
             if (index === -1) return;
 
-            const newTitle    = document.getElementById('edit-title').value;
-            // FIX: trim e converte string vazia para null
-            const newLink     = document.getElementById('edit-link').value.trim() || null;
-            const newDesc     = document.getElementById('edit-desc').value;
-            let newCategory   = document.getElementById('edit-category').value.trim();
+            const newTitle     = document.getElementById('edit-title').value;
+            const newLink      = document.getElementById('edit-link').value.trim() || null;
+            const newDesc      = document.getElementById('edit-desc').value;
+            let newCategory    = document.getElementById('edit-category').value.trim();
             newCategory = newCategory.charAt(0).toUpperCase() + newCategory.slice(1);
             const newImageFile = document.getElementById('edit-image').files[0];
 
@@ -736,8 +725,8 @@
         });
 
         // ── Delete ────────────────────────────────────────────────────────────
-        window.promptDelete = function(event, id) {
-            event.stopPropagation();
+        // ✅ CORREÇÃO: recebe só o id, sem o event
+        window.promptDelete = function(id) {
             itemToDeleteId = id;
             document.getElementById('delete-modal').classList.add('active');
         };
