@@ -344,7 +344,6 @@
         .restore-btn:hover { background: var(--text-muted); color: #fff; }
         .empty-history { text-align: center; color: var(--text-muted); padding: 2rem 0; }
 
-        /* Loading indicator */
         .loading-indicator {
             text-align: center; color: var(--text-muted); padding: 4rem 0;
             font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;
@@ -439,7 +438,6 @@
             query, orderBy
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // ── Firebase config ──────────────────────────────────────────────────
         const firebaseConfig = {
             apiKey: "AIzaSyBiAp5UJ4G4ZLBvTGRrT7f-fHYcV3lE7wU",
             authDomain: "lets-refs.firebaseapp.com",
@@ -455,7 +453,6 @@
         const REFS_COL     = "references";
         const HISTORY_COL  = "history";
 
-        // ── DOM refs ─────────────────────────────────────────────────────────
         const form          = document.getElementById('ref-form');
         const editForm      = document.getElementById('edit-form');
         const board         = document.getElementById('mood-board');
@@ -466,7 +463,6 @@
 
         const baseCategories = ['Animação', 'Logo', 'Site', 'Tipografia'];
 
-        // In-memory cache (same shape as before, but id = Firestore doc id)
         let references  = [];
         let historyData = [];
 
@@ -474,7 +470,7 @@
         let itemToEditId   = null;
         let currentFilter  = 'Todos';
 
-        // ── Grid / slider logic (unchanged, uses localStorage only for size pref) ──
+        // ── Grid / slider ─────────────────────────────────────────────────────
         function updateLayoutMode(size) {
             if (size <= 200) board.classList.add('list-view');
             else board.classList.remove('list-view');
@@ -500,7 +496,6 @@
         gridSlider.addEventListener('change', e => localStorage.setItem('myCleanBoardGridSize', e.target.value));
 
         // ── Firestore helpers ─────────────────────────────────────────────────
-
         async function loadReferences() {
             const q = query(collection(db, REFS_COL), orderBy("createdAt", "desc"));
             const snap = await getDocs(q);
@@ -541,8 +536,7 @@
             await deleteDoc(doc(db, HISTORY_COL, id));
         }
 
-        // ── UI helpers (unchanged logic) ──────────────────────────────────────
-
+        // ── UI helpers ────────────────────────────────────────────────────────
         function updateCategoriesAndFilters() {
             const savedCategories = references.map(r => r.category);
             const uniqueCategories = [...new Set([...baseCategories, ...savedCategories])].sort();
@@ -597,10 +591,15 @@
                 item.className = ref.link ? 'mood-item has-link' : 'mood-item';
                 item.style.animationDelay = `${Math.min(index * 0.08, 1.5)}s`;
 
+                // ── FIX: link clicável na imagem ──────────────────────────────
                 if (ref.link) {
-                    item.onclick = (e) => {
-                        if (!e.target.closest('.card-actions')) window.open(ref.link, '_blank');
-                    };
+                    item.style.cursor = 'pointer';
+                    item.addEventListener('click', function(e) {
+                        if (!e.target.closest('.card-actions')) {
+                            e.preventDefault();
+                            window.open(ref.link, '_blank', 'noopener,noreferrer');
+                        }
+                    });
                 }
 
                 const mediaContent = ref.image
@@ -628,11 +627,11 @@
         }
 
         // ── Add ───────────────────────────────────────────────────────────────
-
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             const title     = document.getElementById('ref-title').value;
-            const link      = document.getElementById('ref-link').value;
+            // FIX: trim e converte string vazia para null
+            const link      = document.getElementById('ref-link').value.trim() || null;
             const desc      = document.getElementById('ref-desc').value;
             const imageFile = document.getElementById('ref-image').files[0];
             let category    = document.getElementById('ref-category').value.trim();
@@ -653,7 +652,6 @@
         });
 
         // ── Edit ──────────────────────────────────────────────────────────────
-
         window.openEditModal = function(event, id) {
             event.stopPropagation();
             itemToEditId = id;
@@ -680,7 +678,8 @@
             if (index === -1) return;
 
             const newTitle    = document.getElementById('edit-title').value;
-            const newLink     = document.getElementById('edit-link').value;
+            // FIX: trim e converte string vazia para null
+            const newLink     = document.getElementById('edit-link').value.trim() || null;
             const newDesc     = document.getElementById('edit-desc').value;
             let newCategory   = document.getElementById('edit-category').value.trim();
             newCategory = newCategory.charAt(0).toUpperCase() + newCategory.slice(1);
@@ -704,7 +703,6 @@
         });
 
         // ── Delete ────────────────────────────────────────────────────────────
-
         window.promptDelete = function(event, id) {
             event.stopPropagation();
             itemToDeleteId = id;
@@ -721,7 +719,6 @@
             const index = references.findIndex(r => r.id === itemToDeleteId);
             if (index > -1) {
                 const [removed] = references.splice(index, 1);
-                // Move to history collection (strip the old Firestore id, let addHistory create new)
                 const { id: _oldId, createdAt: _ct, ...refData } = removed;
                 await deleteReference(itemToDeleteId);
                 const newHistId = await addHistory(refData);
@@ -733,7 +730,6 @@
         };
 
         // ── History ───────────────────────────────────────────────────────────
-
         window.openHistoryModal = function() {
             renderHistory();
             document.getElementById('history-modal').classList.add('active');
@@ -773,14 +769,14 @@
             renderBoard();
         };
 
-        // ── Close modals on backdrop click ────────────────────────────────────
+        // ── Fechar modais clicando no backdrop ────────────────────────────────
         document.querySelectorAll('.modal-overlay').forEach(modal => {
             modal.addEventListener('click', function(e) {
                 if (e.target === this) this.classList.remove('active');
             });
         });
 
-        // ── Bootstrap: load data then render ─────────────────────────────────
+        // ── Init ──────────────────────────────────────────────────────────────
         async function init() {
             await Promise.all([loadReferences(), loadHistory()]);
             if (loadingMsg) loadingMsg.remove();
