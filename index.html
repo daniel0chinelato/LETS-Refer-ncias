@@ -3,80 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Referências</title>
+    <title>LETS | Painel de Referências</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
         :root {
-            --bg-base: #050505; --bg-surface: #121212; --bg-surface-hover: #1a1a1a;
-            --text-main: #f0f0f0; --text-muted: #888888; --accent: #ffffff;
-            --danger: #ff4a4a; --brand-color: #d20a11; --radius: 12px;
-            --grid-item-size: 320px; 
+            --bg-base: #050505; --bg-surface: #121212; --brand-color: #d20a11;
+            --text-main: #f0f0f0; --text-muted: #888888; --radius: 12px; --grid-item-size: 320px; 
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: var(--bg-base); color: var(--text-main); font-family: "Century Gothic", sans-serif; padding: 3rem 2rem; min-height: 100vh; }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: sans-serif; padding: 3rem 2rem; min-height: 100vh; }
+
         .logo-lets { position: absolute; top: 3rem; left: 3rem; max-height: 80px; z-index: 100; }
-        @media (max-width: 900px) { .logo-lets { position: static; display: block; margin: 0 auto 2rem auto; } }
-
-        /* Estilos mantidos (Header, Form, Grid) */
-        header { display: flex; flex-direction: column; align-items: center; margin-bottom: 3rem; gap: 2rem; }
-        .top-form { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; background: var(--bg-surface); padding: 0.8rem 1.2rem; border-radius: 100px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 1400px; }
-        .top-form input { background: transparent; border: none; color: #fff; padding: 0.5rem 1rem; width: 160px; }
-        .top-form button { background: var(--text-main); border: none; padding: 0.5rem 1.5rem; border-radius: 50px; cursor: pointer; font-weight: bold; }
         
-        .toolbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.5rem; max-width: 1800px; margin: 0 auto 2.5rem auto; border-bottom: 1px solid #1a1a1a; padding-bottom: 1.5rem; }
-        .filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.8rem; }
-        .filter-btn { background: transparent; border: 1px solid #333; color: var(--text-muted); padding: 0.4rem 1.2rem; border-radius: 50px; cursor: pointer; transition: 0.3s; }
-        .filter-btn:hover, .filter-btn.active { background: var(--brand-color); color: #fff; border-color: var(--brand-color); }
-        .grid-size-control { justify-self: end; display: flex; align-items: center; gap: 10px; color: var(--text-muted); }
-        .size-btn { background: #222; border: none; color: #fff; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; }
+        .main-tabs { display: flex; justify-content: center; gap: 2rem; margin-bottom: 3rem; border-bottom: 1px solid #222; padding-bottom: 1rem; }
+        .main-tab-btn { background: transparent; border: none; color: var(--text-muted); text-transform: uppercase; cursor: pointer; padding-bottom: 0.5rem; }
+        .main-tab-btn.active { color: var(--brand-color); border-bottom: 2px solid var(--brand-color); }
 
-        .mood-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-item-size)), 1fr)); gap: 1.5rem; max-width: 1800px; margin: 0 auto; }
-        .mood-item { aspect-ratio: 1 / 1; position: relative; border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
+        .top-form { display: flex; gap: 0.8rem; justify-content: center; background: var(--bg-surface); padding: 1rem; border-radius: 50px; max-width: 1200px; margin: 0 auto; }
+        .top-form input { background: #000; border: 1px solid #333; color: #fff; padding: 0.5rem 1rem; border-radius: 20px; }
+        .top-form button { background: var(--brand-color); color: #fff; border: none; padding: 0.5rem 2rem; border-radius: 20px; cursor: pointer; }
+
+        .toolbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin: 2rem auto; max-width: 1600px; }
+        .filters { display: flex; gap: 0.5rem; justify-content: center; }
+        .filter-btn { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; }
+        .filter-btn.active { background: var(--brand-color); }
+
+        .mood-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--grid-item-size), 1fr)); gap: 1.5rem; }
+        .mood-item { aspect-ratio: 1/1; background: #111; border-radius: var(--radius); overflow: hidden; position: relative; }
         .mood-item img { width: 100%; height: 100%; object-fit: cover; }
         
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-overlay.active { display: flex; }
-        .modal-box { background: var(--bg-surface); padding: 2.5rem; border-radius: var(--radius); width: 400px; text-align: center; }
+        /* Área Infinita */
+        .painel-scroll-area { overflow-x: auto; white-space: nowrap; padding-bottom: 20px; }
+        #board-painel { display: flex; flex-direction: column; flex-wrap: wrap; height: 70vh; gap: 1rem; }
+        #board-painel .mood-item { width: 250px; aspect-ratio: auto; height: auto; }
     </style>
 </head>
 <body>
 
-    <img src="lets.png" alt="LETS" class="logo-lets" onerror="this.style.display='none'">
+    <img src="lets.png" alt="LETS" class="logo-lets">
 
-    <header>
-        <div class="header-top">
-            <h1>Referências</h1>
-            <button class="history-btn" onclick="openHistoryModal()">Histórico</button>
-        </div>
-        
+    <nav class="main-tabs">
+        <button class="main-tab-btn active" onclick="switchTab('referencias')">Referências</button>
+        <button class="main-tab-btn" onclick="switchTab('painel')">Painel Semântico</button>
+    </nav>
+
+    <div id="view-referencias">
         <form id="ref-form" class="top-form">
             <input type="text" id="ref-title" placeholder="Título" required>
             <input type="text" id="ref-category" list="categories-list" placeholder="Categoria" required>
             <datalist id="categories-list"></datalist>
-            <input type="text" id="ref-desc" placeholder="Descrição">
-            <input type="url" id="ref-link" placeholder="Link">
             <input type="file" id="ref-image" accept="image/*">
             <button type="submit">Salvar</button>
         </form>
-    </header>
-
-    <div class="toolbar">
-        <div style="content:'';"></div>
-        <nav class="filters" id="filters-nav"></nav>
-        <div class="grid-size-control">
-            <button class="size-btn" onclick="changeSize(-50)">-</button>
-            <input type="range" id="grid-slider" min="100" max="600" step="10" value="320">
-            <button class="size-btn" onclick="changeSize(50)">+</button>
+        <div class="toolbar">
+            <div></div>
+            <div class="filters" id="filters-nav"></div>
+            <div class="grid-controls">
+                <button class="size-btn" onclick="changeSize(-50)">-</button>
+                <input type="range" id="grid-slider" min="150" max="600" value="320">
+                <button class="size-btn" onclick="changeSize(50)">+</button>
+            </div>
         </div>
+        <section class="mood-board" id="board-referencias"></section>
     </div>
 
-    <main><section class="mood-board" id="mood-board"></section></main>
+    <div id="view-painel" style="display: none;" class="painel-scroll-area">
+        <section class="mood-board" id="board-painel"></section>
+    </div>
 
     <script>
-        // FIREBASE CONFIG
+        // CONFIGURAÇÃO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyBiAp5UJ4G4ZLBvTGRrT7f-fHYcV3lE7wU",
             authDomain: "lets-refs.firebaseapp.com",
@@ -88,48 +87,65 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // CATEGORIAS FIXAS
-        const baseCategories = ['Todos', 'Animação', 'Tipografia', 'Site', 'Logo', 'Diversas', 'Studio'];
-        
         let references = [];
-        let currentFilter = 'Todos';
+        let painel = [];
 
-        async function loadData() {
-            const snapshot = await db.collection('referencias').orderBy('id', 'desc').get();
-            references = snapshot.docs.map(doc => doc.data());
-            updateCategoriesUI();
-            renderBoard();
-        }
-
-        function updateCategoriesUI() {
-            const filtersNav = document.getElementById('filters-nav');
-            filtersNav.innerHTML = baseCategories.map(cat => 
-                `<button class="filter-btn ${currentFilter === cat ? 'active' : ''}" onclick="setFilter('${cat}')">${cat}</button>`
-            ).join('');
+        // CARREGAR DADOS
+        async function init() {
+            const refSnap = await db.collection('referencias').get();
+            references = refSnap.docs.map(d => d.data());
             
-            document.getElementById('categories-list').innerHTML = baseCategories.map(c => `<option value="${c}">`).join('');
+            const painelSnap = await db.collection('moodboard').get();
+            painel = painelSnap.docs.map(d => d.data());
+            
+            render();
         }
 
-        window.setFilter = (cat) => {
-            currentFilter = cat;
-            updateCategoriesUI();
-            renderBoard();
+        // FUNÇÃO DE COMPRESSÃO (PARA NÃO ATINGIR LIMITE DO FIRESTORE)
+        function compress(file, callback) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 800; canvas.height = (img.height * 800) / img.width;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    callback(canvas.toDataURL('image/jpeg', 0.6));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // SALVAR
+        document.getElementById('ref-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('ref-image').files[0];
+            compress(file, async (data) => {
+                const doc = { id: Date.now(), title: document.getElementById('ref-title').value, category: document.getElementById('ref-category').value, image: data };
+                await db.collection('referencias').add(doc);
+                init();
+            });
         };
 
-        function renderBoard() {
-            const board = document.getElementById('mood-board');
-            board.innerHTML = '';
-            const filtered = currentFilter === 'Todos' ? references : references.filter(r => r.category === currentFilter);
-            
-            filtered.forEach(ref => {
-                const item = document.createElement('div');
-                item.className = 'mood-item';
-                item.innerHTML = `<img src="${ref.image}"><h3>${ref.title}</h3>`;
-                board.appendChild(item);
-            });
+        // RENDER
+        function render() {
+            document.getElementById('board-referencias').innerHTML = references.map(r => `<div class="mood-item"><img src="${r.image}"><h3>${r.title}</h3></div>`).join('');
+            document.getElementById('board-painel').innerHTML = painel.map(p => `<div class="mood-item"><img src="${p.image}"></div>`).join('');
         }
 
-        loadData();
+        // UI
+        window.changeSize = (delta) => {
+            let s = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-item-size')) + delta;
+            document.documentElement.style.setProperty('--grid-item-size', s + 'px');
+        };
+
+        window.switchTab = (tab) => {
+            document.getElementById('view-referencias').style.display = tab === 'referencias' ? 'block' : 'none';
+            document.getElementById('view-painel').style.display = tab === 'painel' ? 'block' : 'none';
+        };
+
+        init();
     </script>
 </body>
 </html>
