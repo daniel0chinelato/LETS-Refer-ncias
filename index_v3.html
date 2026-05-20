@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LETS | Referências & Painel</title>
+    
+    <!-- Scripts do Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #050505; --bg-surface: #121212; --bg-surface-hover: #1a1a1a;
+            --text-main: #f0f0f0; --text-muted: #888888; --accent: #ffffff;
+            --danger: #ff4a4a; --brand-color: #d20a11; --radius: 12px;
+            --grid-item-size: 320px; 
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: "Century Gothic", "Segoe UI", sans-serif; padding: 3rem 2rem; min-height: 100vh; position: relative; }
+
+        /* Drag Overlay */
+        #drag-overlay {
+            position: fixed; inset: 0; background: rgba(210, 10, 17, 0.9); z-index: 9999;
+            display: none; justify-content: center; align-items: center;
+            color: white; font-size: 2.5rem; font-weight: bold; text-transform: uppercase; letter-spacing: 5px;
+            pointer-events: none; backdrop-filter: blur(5px);
+        }
+
+        /* Lightbox (Zoom HD) */
+        #lightbox {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
+            display: none; justify-content: center; align-items: center; cursor: zoom-out;
+            padding: 2rem;
+        }
+        #lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border-radius: 8px; }
+
+        /* Logo e Navegação Principal */
+        .logo-lets { position: absolute; top: 3rem; left: 3rem; max-height: 45px; z-index: 100; }
+        
+        .main-tabs {
+            display: flex; justify-content: center; gap: 2rem; margin-bottom: 3rem;
+            border-bottom: 1px solid #222; padding-bottom: 1rem;
+        }
+        .main-tab-btn {
+            background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem;
+            text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s;
+            padding-bottom: 0.5rem; border-bottom: 2px solid transparent;
+        }
+        .main-tab-btn:hover { color: #fff; }
+        .main-tab-btn.active { color: var(--brand-color); border-bottom: 2px solid var(--brand-color); }
+
+        /* Header Form */
+        header { display: flex; flex-direction: column; align-items: center; margin-bottom: 3rem; gap: 2rem; }
+        .top-form { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; background-color: var(--bg-surface); padding: 0.8rem 1.2rem; border-radius: 100px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 1400px; }
+        .top-form input { background-color: transparent; border: none; color: var(--text-main); padding: 0.5rem 1rem; font-family: inherit; font-size: 0.95rem; width: 160px; }
+        .top-form input:focus { outline: none; background-color: rgba(255, 255, 255, 0.05); border-radius: 50px; }
+        .top-form input[type="file"] { width: 210px; color: var(--text-muted); font-size: 0.9rem; }
+        .top-form input[type="file"]::-webkit-file-upload-button { background-color: #222; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; margin-right: 10px; transition: 0.3s; }
+        .top-form input[type="file"]::-webkit-file-upload-button:hover { background-color: #333; }
+        .top-form button[type="submit"] { background-color: var(--text-main); color: var(--bg-base); border: none; padding: 0.5rem 1.5rem; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .top-form button[type="submit"]:hover { background-color: var(--text-muted); color: #fff; }
+
+        /* Toolbar */
+        .toolbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.5rem; max-width: 1800px; margin: 0 auto 2.5rem auto; border-bottom: 1px solid #1a1a1a; padding-bottom: 1.5rem; }
+        .toolbar::before { content: ""; }
+        .filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.8rem; }
+        .filter-btn { background: transparent; border: 1px solid #333; color: var(--text-muted); padding: 0.4rem 1.2rem; border-radius: 50px; cursor: pointer; font-size: 0.85rem; transition: 0.3s; }
+        .filter-btn:hover, .filter-btn.active { background: var(--brand-color); color: #fff; border-color: var(--brand-color); }
+        .grid-size-control { justify-self: end; display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.75rem; }
+        .size-btn { background: #222; border: none; color: #fff; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .size-btn:hover { background: var(--brand-color); }
+        input[type="range"] { -webkit-appearance: none; width: 120px; background: transparent; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--text-main); margin-top: -5px; cursor: pointer; transition: 0.2s; }
+
+        /* Modo 1: Grid Base (Referências) */
+        .mood-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-item-size)), 1fr)); gap: 1.5rem; max-width: 1800px; margin: 0 auto; }
+        .mood-item { aspect-ratio: 1 / 1; position: relative; border-radius: var(--radius); overflow: hidden; background-color: var(--bg-surface); transition: transform 0.5s, box-shadow 0.5s; cursor: zoom-in; }
+        .mood-item.has-link { cursor: pointer; }
+        .mood-item:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05); z-index: 2; }
+        .mood-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: 0.8s; }
+        .mood-item:hover img { transform: scale(1.08); filter: brightness(0.35); }
+        .mood-overlay { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 50%); display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem 1.5rem; }
+        .overlay-category { font-size: 0.7rem; text-transform: uppercase; color: var(--brand-color); margin-bottom: 0.3rem; font-weight: bold; }
+        .mood-overlay h3 { font-size: 1.4rem; font-weight: normal; margin-bottom: 0; line-height: 1.2; }
+        .hidden-content { display: grid; grid-template-rows: 0fr; transition: 0.4s; }
+        .mood-item:hover .hidden-content { grid-template-rows: 1fr; }
+        .hidden-content-inner { overflow: hidden; opacity: 0; transform: translateY(10px); transition: 0.3s; pointer-events: auto; }
+        .mood-item:hover .hidden-content-inner { opacity: 1; transform: translateY(0); padding-top: 1rem; }
+        .overlay-desc { font-size: 0.85rem; color: #ccc; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-actions { display: flex; gap: 1rem; }
+        .action-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem 1rem; border-radius: 50px; cursor: pointer; font-size: 0.7rem; text-transform: uppercase; color: #fff; transition: 0.3s; backdrop-filter: blur(5px); }
+        .action-btn:hover { background: #fff; color: #000; }
+
+        /* Modo 2: Painel Semântico (INFINITO E FLUIDO) */
+        #view-painel .mood-item { aspect-ratio: auto; margin-bottom: 1.5rem; break-inside: avoid; display: inline-block; width: 100%; }
+        
+        /* A MÁGICA: column-width em vez de column-count cria colunas infinitas baseadas no tamanho da tela */
+        #view-painel .mood-board { display: block; column-width: 280px; column-gap: 1.5rem; max-width: 100%; }
+        
+        #view-painel .mood-overlay { opacity: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; transition: 0.3s; }
+        #view-painel .mood-item:hover .mood-overlay { opacity: 1; pointer-events: auto; }
+        
+        .empty-state { text-align: center; color: #555; padding: 5rem 0; font-size: 1.2rem; grid-column: 1 / -1; }
+
+        /* Responsividade */
+        @media (max-width: 900px) {
+            .logo-lets { position: static; display: block; margin: 0 auto 2rem auto; }
+            .toolbar { display: flex; flex-direction: column; justify-content: center; }
+            .toolbar::before { display: none; }
+            .top-form { border-radius: var(--radius); flex-direction: column; width: 100%; max-width: 400px; }
+            .top-form input[type="text"], .top-form input[type="url"], .top-form input[type="file"] { width: 100%; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <img src="lets.png" alt="LETS" class="logo-lets" onerror="this.style.display='none'">
+
+    <div id="drag-overlay">Solte a imagem aqui</div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" alt="Zoom">
+    </div>
+
+    <!-- Abas Principais -->
+    <nav class="main-tabs">
+        <button class="main-tab-btn active" onclick="switchTab('referencias')" id="tab-ref">Referências</button>
+        <button class="main-tab-btn" onclick="switchTab('painel')" id="tab-painel">Painel Semântico</button>
+    </nav>
+
+    <!-- VIEW 1: REFERÊNCIAS -->
+    <div id="view-referencias">
+        <header>
+            <form id="ref-form" class="top-form">
+                <input type="text" id="ref-title" placeholder="Título" required>
+                <input type="text" id="ref-category" list="categories-list" placeholder="Seção (ex: Site)" required>
+                <datalist id="categories-list"></datalist>
+                <input type="text" id="ref-desc" placeholder="Descrição">
+                <input type="url" id="ref-link" placeholder="Link">
+                <input type="file" id="ref-image" accept="image/*">
+                <button type="submit">Salvar</button>
+            </form>
+        </header>
+
+        <div class="toolbar">
+            <nav class="filters" id="filters-nav"></nav>
+            <div class="grid-size-control">
+                <label style="margin-right: 5px;">Tamanho</label>
+                <button class="size-btn" onclick="changeSize(-50)">-</button>
+                <input type="range" id="grid-slider" min="150" max="600" step="50" value="320">
+                <button class="size-btn" onclick="changeSize(50)">+</button>
+            </div>
+        </div>
+
+        <main><section class="mood-board" id="board-referencias"></section></main>
+    </div>
+
+    <!-- VIEW 2: PAINEL SEMÂNTICO -->
+    <div id="view-painel" style="display: none;">
+        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Arraste ou cole (Ctrl+V) imagens aqui para criar seu painel infinito.</p>
+        <main><section class="mood-board" id="board-painel"></section></main>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURAÇÃO DO FIREBASE (PREENCHA AQUI)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "",
+            authDomain: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: ""
+        };
+
+        let db, storage, useFirebase = false;
+
+        try {
+            if (firebaseConfig.apiKey) {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                storage = firebase.storage();
+                useFirebase = true;
+                console.log("🔥 Firebase Conectado!");
+            } else {
+                console.warn("📁 Firebase não configurado. Rodando no modo de Armazenamento Local.");
+            }
+        } catch (e) { console.error("Erro no Firebase:", e); }
+
+        // ==========================================
+        // ESTADO GLOBAL
+        // ==========================================
+        let currentTab = 'referencias';
+        let currentFilter = 'Todos';
+        const baseCategories = ['Animação', 'Logo', 'Site', 'Tipografia'];
+        
+        let refsData = JSON.parse(localStorage.getItem('lets_refs')) || [];
+        let painelData = JSON.parse(localStorage.getItem('lets_painel')) || [];
+
+        const boardRef = document.getElementById('board-referencias');
+        const boardPainel = document.getElementById('board-painel');
+        const dragOverlay = document.getElementById('drag-overlay');
+
+        // ==========================================
+        // CONTROLE DE ABAS E UI
+        // ==========================================
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            document.getElementById('tab-ref').classList.toggle('active', tab === 'referencias');
+            document.getElementById('tab-painel').classList.toggle('active', tab === 'painel');
+            
+            document.getElementById('view-referencias').style.display = tab === 'referencias' ? 'block' : 'none';
+            document.getElementById('view-painel').style.display = tab === 'painel' ? 'block' : 'none';
+            
+            renderBoards();
+        };
+
+        window.openLightbox = function(imgSrc) {
+            document.getElementById('lightbox-img').src = imgSrc;
+            document.getElementById('lightbox').style.display = 'flex';
+        };
+        
+        window.closeLightbox = function() {
+            document.getElementById('lightbox').style.display = 'none';
+            document.getElementById('lightbox-img').src = '';
+        };
+
+        // ==========================================
+        // PASTE (Ctrl+V) E DRAG & DROP
+        // ==========================================
+        window.addEventListener('paste', async (e) => {
+            const items = (e.clipboardData || window.clipboardData).items;
+            for (let item of items) {
+                if (item.type.indexOf('image') === 0) {
+                    const file = item.getAsFile();
+                    handleIncomingFile(file);
+                }
+            }
+        });
+
+        window.addEventListener('dragover', e => { e.preventDefault(); dragOverlay.style.display = 'flex'; });
+        window.addEventListener('dragleave', e => { if (e.clientX === 0) dragOverlay.style.display = 'none'; });
+        window.addEventListener('drop', e => {
+            e.preventDefault();
+            dragOverlay.style.display = 'none';
+            if (e.dataTransfer.files.length > 0 && e.dataTransfer.files[0].type.startsWith('image/')) {
+                handleIncomingFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        function handleIncomingFile(file) {
+            if (currentTab === 'referencias') {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                document.getElementById('ref-image').files = dataTransfer.files;
+                alert('Imagem carregada no formulário! Preencha o título e salve.');
+            } else {
+                processAndSaveImage(file, 'painel');
+            }
+        }
+
+        // ==========================================
+        // PROCESSAMENTO E BANCO DE DADOS
+        // ==========================================
+        function processAndSaveImage(file, targetMode, textData = null) {
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                const base64Image = event.target.result;
+                
+                if (useFirebase) {
+                    try {
+                        const fileRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
+                        await fileRef.put(file);
+                        const downloadURL = await fileRef.getDownloadURL();
+                        
+                        if (targetMode === 'painel') {
+                            await db.collection('moodboard').add({ url: downloadURL, timestamp: Date.now() });
+                            painelData.unshift({ id: Date.now(), image: downloadURL }); 
+                        } else {
+                            const newDoc = { ...textData, image: downloadURL, timestamp: Date.now() };
+                            await db.collection('referencias').add(newDoc);
+                            refsData.unshift({ id: Date.now(), ...newDoc });
+                        }
+                    } catch(e) { console.error("Erro ao subir Firebase", e); }
+                    
+                } else {
+                    if (targetMode === 'painel') {
+                        painelData.unshift({ id: Date.now(), image: base64Image });
+                        localStorage.setItem('lets_painel', JSON.stringify(painelData));
+                    } else {
+                        refsData.unshift({ id: Date.now(), ...textData, image: base64Image });
+                        localStorage.setItem('lets_refs', JSON.stringify(refsData));
+                    }
+                }
+                renderBoards();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ==========================================
+        // RENDERIZAÇÃO
+        // ==========================================
+        function renderBoards() {
+            // Atualizar Filtros
+            const cats = [...new Set([...baseCategories, ...refsData.map(r => r.category)])].filter(Boolean).sort();
+            document.getElementById('categories-list').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+            document.getElementById('filters-nav').innerHTML = `<button class="filter-btn ${currentFilter==='Todos'?'active':''}" onclick="setFilter('Todos')">Todos</button>` + 
+                cats.map(c => `<button class="filter-btn ${currentFilter===c?'active':''}" onclick="setFilter('${c}')">${c}</button>`).join('');
+
+            // Renderizar Referências
+            boardRef.innerHTML = '';
+            const filteredRefs = currentFilter === 'Todos' ? refsData : refsData.filter(r => r.category === currentFilter);
+            
+            if(filteredRefs.length === 0 && currentTab === 'referencias') boardRef.innerHTML = '<div class="empty-state">Nenhuma referência encontrada.</div>';
+
+            filteredRefs.forEach((ref, idx) => {
+                const div = document.createElement('div');
+                div.className = ref.link ? 'mood-item has-link' : 'mood-item';
+                div.style.animationDelay = `${Math.min(idx * 0.05, 1)}s`;
+                
+                div.onclick = (e) => {
+                    if(e.target.closest('.card-actions')) return;
+                    if(ref.link) window.open(ref.link, '_blank');
+                    else window.openLightbox(ref.image);
+                };
+
+                div.innerHTML = `
+                    <img src="${ref.image}" alt="${ref.title}">
+                    <div class="mood-overlay">
+                        <span class="overlay-category">${ref.category}</span>
+                        <h3>${ref.title}</h3>
+                        <div class="hidden-content">
+                            <div class="hidden-content-inner">
+                                ${ref.description ? `<p class="overlay-desc">${ref.description}</p>` : ''}
+                                <div class="card-actions">
+                                    <button class="action-btn" onclick="deleteItem('refs', ${ref.id})">Apagar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                boardRef.appendChild(div);
+            });
+
+            // Renderizar Painel Semântico Puro
+            boardPainel.innerHTML = '';
+            if(painelData.length === 0 && currentTab === 'painel') boardPainel.innerHTML = '<div class="empty-state">O painel está vazio. Cole (Ctrl+V) ou arraste imagens aqui!</div>';
+            
+            painelData.forEach((imgObj, idx) => {
+                const div = document.createElement('div');
+                div.className = 'mood-item';
+                div.style.animationDelay = `${Math.min(idx * 0.05, 1)}s`;
+                div.onclick = () => window.openLightbox(imgObj.image);
+                
+                div.innerHTML = `
+                    <img src="${imgObj.image}">
+                    <div class="mood-overlay">
+                        <div class="card-actions"><button class="action-btn" onclick="event.stopPropagation(); deleteItem('painel', ${imgObj.id})">Remover</button></div>
+                    </div>`;
+                boardPainel.appendChild(div);
+            });
+        }
+
+        // ==========================================
+        // EVENTOS DO FORMULÁRIO E EXCLUSÃO
+        // ==========================================
+        document.getElementById('ref-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const textData = {
+                title: document.getElementById('ref-title').value,
+                category: document.getElementById('ref-category').value.trim(),
+                description: document.getElementById('ref-desc').value,
+                link: document.getElementById('ref-link').value
+            };
+            const file = document.getElementById('ref-image').files[0];
+            
+            if(file) processAndSaveImage(file, 'refs', textData);
+            else { alert("Anexe uma imagem!"); }
+            
+            this.reset();
+            currentFilter = textData.category;
+        });
+
+        window.setFilter = function(cat) { currentFilter = cat; renderBoards(); };
+
+        window.deleteItem = async function(mode, id) {
+            if(!confirm("Remover imagem definitivamente?")) return;
+            
+            if(mode === 'refs') {
+                refsData = refsData.filter(r => r.id !== id);
+                if(!useFirebase) localStorage.setItem('lets_refs', JSON.stringify(refsData));
+            } else {
+                painelData = painelData.filter(r => r.id !== id);
+                if(!useFirebase) localStorage.setItem('lets_painel', JSON.stringify(painelData));
+            }
+            renderBoards();
+        };
+
+        // ==========================================
+        // SLIDER DE TAMANHO
+        // ==========================================
+        const gridSlider = document.getElementById('grid-slider');
+        function updateGrid(size) {
+            size = Math.max(150, Math.min(600, size));
+            gridSlider.value = size;
+            document.documentElement.style.setProperty('--grid-item-size', `${size}px`);
+        }
+        window.changeSize = (delta) => updateGrid(parseInt(gridSlider.value) + delta);
+        gridSlider.addEventListener('input', (e) => updateGrid(e.target.value));
+
+        renderBoards();
+    </script>
+</body>
+</html>
